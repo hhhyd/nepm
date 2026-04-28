@@ -1,5 +1,8 @@
 <template>
   <div class="login-container">
+    <el-card class="decision" @click="$router.push('/decisioner')">
+      🌟通往决策者页面🌟
+    </el-card>
     <el-card class="login-card">
       <template #header>
         <h2>全国环境监测网格化平台</h2>
@@ -138,6 +141,7 @@ const handleLogin = async () => {
 <style scoped>
 .login-container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
@@ -153,4 +157,25 @@ const handleLogin = async () => {
   margin: 0;
   color: #409EFF;
 }
+
+.decision {
+  width: 300px;
+  margin: 0 auto 20px auto;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.6);  
+  border-radius: 15px;                   
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;             
+  color: #333333;                            
+  font-size: 16px;                       
+  font-weight: bold;                    
+  border: 2px solid rgba(255, 255, 255, 0.3);  
+}
+
+.decision:hover {
+  transform: translateY(-5px);           /* 悬停上浮 */
+  background: rgba(255, 255, 255, 0.3); /* 悬停变亮一点 */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);  /* 悬停阴影加深 */
+  }
 </style>
