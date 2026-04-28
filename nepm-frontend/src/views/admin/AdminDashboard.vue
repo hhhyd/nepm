@@ -1,34 +1,40 @@
 <template>
   <div class="dashboard">
     <Header />
-    
+
     <el-container class="main-container">
-      <el-aside width="200px">
+      <el-aside width="220px">
         <el-menu
-          :default-active="$route.path"
-          router
-          background-color="#545c64"
-          text-color="#fff"
-          active-text-color="#ffd04b"
+            :default-active="$route.path"
+            router
+            background-color="#545c64"
+            text-color="#fff"
+            active-text-color="#ffd04b"
         >
           <el-menu-item index="/admin/dashboard">
             <el-icon><HomeFilled /></el-icon>
             <span>首页</span>
           </el-menu-item>
-          <el-menu-item index="/admin/feedback">
-            <el-icon><Document /></el-icon>
-            <span>反馈管理</span>
-          </el-menu-item>
-          <el-menu-item index="/admin/statistics">
-            <el-icon><DataAnalysis /></el-icon>
-            <span>数据统计</span>
-          </el-menu-item>
+
+          <el-sub-menu index="supervision">
+            <template #title><el-icon><Document /></el-icon><span>公众监督数据管理</span></template>
+            <el-menu-item index="/admin/feedback">公众监督数据列表</el-menu-item>
+            <el-menu-item index="/admin/aqilist">确认AQI数据列表</el-menu-item>
+          </el-sub-menu>
+
+          <el-sub-menu index="statistics">
+            <template #title><el-icon><DataAnalysis /></el-icon><span>统计数据管理</span></template>
+            <el-menu-item index="/admin/provincestat">省分组检查统计</el-menu-item>
+            <el-menu-item index="/admin/distributionstat">AQI指数分布统计</el-menu-item>
+            <el-menu-item index="/admin/trendstat">AQI指数趋势统计</el-menu-item>
+            <el-menu-item index="/admin/otherstat">其它数据统计</el-menu-item>
+          </el-sub-menu>
         </el-menu>
       </el-aside>
-      
+
       <el-main>
         <h2>欢迎使用全国环境监测网格化平台</h2>
-        
+
         <el-row :gutter="20" style="margin-top: 20px">
           <el-col :span="6">
             <el-card shadow="hover">
@@ -81,7 +87,7 @@ const loadStats = async () => {
       getProvinceCoverage(),
       getCityCoverage()
     ])
-    
+
     stats.value = {
       total: total || 0,
       good: good || 0,
