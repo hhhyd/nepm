@@ -37,7 +37,37 @@ const router = createRouter({
           path: 'statistics',
           name: 'AdminStatistics',
           component: () => import('@/views/admin/StatisticsView.vue')
-        }
+        },
+        {
+          path: 'supervisionList',
+          name: 'SupervisionList',
+          component: () => import('@/views/admin/SupervisionList.vue')
+        },
+        {
+          path: 'aqilist',
+          name: 'AqiList',
+          component: () => import('@/views/admin/AqiList.vue')
+        },
+        {
+          path: 'provincestat',
+          name: 'ProvinceStat',
+          component: () => import('@/views/admin/ProvinceStat.vue')
+        },
+        {
+          path: 'distributionstat',
+          name: 'DistributionStat',
+          component: () => import('@/views/admin/DistributionStat.vue')
+        },
+        {
+          path: 'trendstat',
+          name: 'TrendStat',
+          component: () => import('@/views/admin/TrendStat.vue')
+        },
+          {
+            path: 'otherstat',
+            name: 'OtherStat',
+            component: () => import('@/views/admin/OtherStat.vue')
+          }
       ]
     },
     {
