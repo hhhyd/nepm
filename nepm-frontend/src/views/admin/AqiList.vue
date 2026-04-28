@@ -1,6 +1,6 @@
 <template>
   <div>
-    网格员我的任务页面
+    确认aqi数据列表
   </div>
 </template>
 

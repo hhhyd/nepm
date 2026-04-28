@@ -1,6 +1,6 @@
 <template>
   <div>
-    网格员我的任务页面
+    AQI指数分布统计
   </div>
 </template>
 

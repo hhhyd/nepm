@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '@/views/Login.vue'
 import Register from '@/views/Register.vue'
+import Decisioner from '../views/decision/Decisioner.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -36,7 +37,37 @@ const router = createRouter({
           path: 'statistics',
           name: 'AdminStatistics',
           component: () => import('@/views/admin/StatisticsView.vue')
-        }
+        },
+        {
+          path: 'supervisionList',
+          name: 'SupervisionList',
+          component: () => import('@/views/admin/SupervisionList.vue')
+        },
+        {
+          path: 'aqilist',
+          name: 'AqiList',
+          component: () => import('@/views/admin/AqiList.vue')
+        },
+        {
+          path: 'provincestat',
+          name: 'ProvinceStat',
+          component: () => import('@/views/admin/ProvinceStat.vue')
+        },
+        {
+          path: 'distributionstat',
+          name: 'DistributionStat',
+          component: () => import('@/views/admin/DistributionStat.vue')
+        },
+        {
+          path: 'trendstat',
+          name: 'TrendStat',
+          component: () => import('@/views/admin/TrendStat.vue')
+        },
+          {
+            path: 'otherstat',
+            name: 'OtherStat',
+            component: () => import('@/views/admin/OtherStat.vue')
+          }
       ]
     },
     {
@@ -68,6 +99,11 @@ const router = createRouter({
           component: () => import('@/views/gridMember/MyTasks.vue')
         }
       ]
+    },
+    {
+      path: '/decisioner',        
+      name: 'decisioner',             
+      component: Decisioner          
     }
   ]
 })
@@ -75,8 +111,8 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
-  
-  if (to.path !== '/login' && to.path !== '/register' && !user.userType) {
+
+  if (to.path !== '/login' && to.path !== '/register' && to.path !== '/decisioner' && !user.userType) {
     next('/login')
   } else {
     next()
