@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.neusoft.nepm.mapper.StatisticsMapper">
+
+	<resultMap type="Statistics" id="statisticsResultMap">
+		<id property="id" column="id" />
+		<result property="provinceId" column="province_id" />
+		<result property="cityId" column="city_id" />
+		<result property="address" column="address" />
+		<result property="so2Value" column="so2_value" />
+		<result property="so2Level" column="so2_level" />
+		<result property="coValue" column="co_value" />
+		<result property="coLevel" column="co_level" />
+		<result property="spmValue" column="spm_value" />
+		<result property="spmLevel" column="spm_level" />
+		<result property="aqiId" column="aqi_id" />
+		<result property="confirmDate" column="confirm_date" />
+		<result property="confirmTime" column="confirm_time" />
+		<result property="gmId" column="gm_id" />
+		<result property="fdId" column="fd_id" />
+		<result property="information" column="information" />
+		<result property="remarks" column="remarks" />
+		<association property="supervisor" javaType="Supervisor">
+			<id property="telId" column="su_tel_id" />
+			<result property="realName" column="su_real_name" />
+			<result property="birthday" column="su_birthday" />
+			<result property="sex" column="su_sex" />
+		</association>
+		<association property="gridProvince"
+			javaType="GridProvince">
+			<id property="provinceId" column="gp_province_id" />
+			<result property="provinceName" column="gp_province_name" />
+			<result property="provinceAbbr" column="gp_province_abbr" />
+		</association>
+		<association property="gridCity" javaType="GridCity">
+			<id property="cityId" column="gc_city_id" />
+			<result property="cityName" column="gc_city_name" />
+		</association>
+		<association property="aqi" javaType="Aqi">
+			<id property="aqiId" column="aq_aqi_id" />
+			<result property="chineseExplain" column="aq_chinese_explain" />
+			<result property="color" column="aq_color" />
+			<result property="aqiExplain" column="aq_aqi_explain" />
+		</association>
+		<association property="gridMember" javaType="GridMember">
+			<id property="gmId" column="gm_gm_id" />
+			<result property="gmName" column="gm_gm_name" />
+			<result property="tel" column="gm_tel" />
+		</association>
+	</resultMap>
+
+	<sql id="statisticsSqlSelect">
+		select st.*,
+		       gm.gm_id gm_gm_id,
+		       gm.gm_name gm_gm_name,
+		       gm.tel gm_tel,
+		       su.tel_id su_tel_id,
+		       su.real_name su_real_name,
+		       su.birthday su_birthday,
+		       su.sex su_sex,
+		       gp.province_id gp_province_id,
+		       gp.province_name gp_province_name,
+		       gp.province_abbr gp_province_abbr,
+		       gc.city_id gc_city_id,
+		       gc.city_name gc_city_name,
+		       aq.aqi_id aq_aqi_id,
+		       aq.chinese_explain aq_chinese_explain,
+		       aq.color aq_color,
+		       aq.aqi_explain aq_aqi_explain
+		from (statistics st left join grid_member gm on st.gm_id=gm.gm_id)
+		       join supervisor su on st.fd_id=su.tel_id
+		       join grid_province gp on st.province_id=gp.province_id
+		       join grid_city gc on st.city_id=gc.city_id
+		       join aqi aq on st.aqi_id=aq.aqi_id
+	</sql>
+	
+	<sql id="statisticsSqlWhere">
+	    <where>
+	        <if test="provinceId!=0">
+	            and st.province_id = #{provinceId}
+	        </if>
+	        <if test="cityId!=0">
+	            and st.city_id = #{cityId}
+	        </if>
+	        <if test="confirmDate!=null and confirmDate!=''">
+	            and st.confirm_date = #{confirmDate}
+	        </if>
+	    </where>
+	</sql>
+	
+	<!-- nepm工程 -->
+	<select id="getStatisticsCount" parameterType="StatisticsPageRequestDto" resultType="int">
+	    select count(*)
+	    from statistics st
+	    <include refid="statisticsSqlWhere"></include>
+	</select>
+	
+	<select id="listStatisticsPage" parameterType="StatisticsPageRequestDto" resultMap="statisticsResultMap">
+	    <include refid="statisticsSqlSelect"></include>
+	    <include refid="statisticsSqlWhere"></include>
+	    order by st.id desc
+	    limit #{beginNum},#{maxPageNum}
+	</select>
+	
+	<select id="getStatisticsById" parameterType="int" resultMap="statisticsResultMap">
+	    <include refid="statisticsSqlSelect"></include>
+	    where st.id=#{id}
+	</select>
+	
+	<!-- nepm工程 -->
+	
+	<!-- nepv工程 -->
+	<select id="listProvinceItemTotalStatis" resultType="ProvinceItemTotalStatisDto">
+	    select gp.province_id province_id,
+	           gp.province_abbr province_abbr,
+	           gp.province_name province_name,
+	    	   (select count(s.so2_level) from statistics s where s.so2_level>2 and s.province_id=gp.province_id) so2_total,
+	    	   (select count(s.co_level) from statistics s where s.co_level>2 and s.province_id=gp.province_id) co_total,
+	    	   (select count(s.spm_level) from statistics s where s.spm_level>2 and s.province_id=gp.province_id) spm_total,
+	    	   (select count(s.aqi_id) from statistics s where s.aqi_id>2 and s.province_id=gp.province_id) aqi_total
+	    from grid_province gp
+	    order by gp.province_id
+	</select>
+	
+	<select id="listAqiDistributeTotalStatis" resultType="AqiDistributeTotalStatisDto">
+	    select a.aqi_id aqi_id,
+	           a.aqi_explain aqi_explain,
+	           count(s.aqi_id) total
+	    from aqi a left join statistics s on a.aqi_id=s.aqi_id
+	    group by a.aqi_id
+	    order by a.aqi_id
+	</select>
+	
+	<select id="listAqiTrendTotalStatis" parameterType="AqiTrendTotalStatisDto" resultType="AqiTrendTotalStatisDto">
+		<foreach collection="list" item="dto" open="" close="" separator="union all">
+		    select #{dto.month} month,
+		           count(*) total
+		    from statistics
+		    where left(confirm_date,7)=#{dto.month} and aqi_id>2
+		</foreach>
+	</select>
+	
+	<!-- nepv工程 -->
+
+</mapper>
