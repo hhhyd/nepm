@@ -97,13 +97,18 @@ const router = createRouter({
           path: 'myTasks',
           name: 'GridMyTasks',
           component: () => import('@/views/gridMember/MyTasks.vue')
+        },
+        {
+          path: 'detect',
+          name: 'GridDetect',
+          component: () => import('@/views/gridMember/Detect.vue')
         }
       ]
     },
     {
-      path: '/decisioner',        
-      name: 'decisioner',             
-      component: Decisioner          
+      path: '/decisioner',
+      name: 'decisioner',
+      component: Decisioner
     }
   ]
 })
