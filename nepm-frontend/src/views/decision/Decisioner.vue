@@ -61,7 +61,7 @@
           <div ref="bar1" class="bar-box"></div>
         </div>
         <div class="bar-card">
-          <p class="bar-title">二氧化硫(SO2)浓度超标累计</p>
+          <p class="bar-title">二氧化硫(SO₂)浓度超标累计</p>
           <div ref="bar2" class="bar-box"></div>
         </div>
         <div class="bar-card">
@@ -148,6 +148,8 @@ export default {
     }
   },
   mounted() {
+    // 强制锁定缩放
+    this.lockZoom()
     this.initTime()
     this.$nextTick(() => {
       this.refreshAllRandomData()
@@ -155,16 +157,44 @@ export default {
       this.initMap()
     })
     this.startAutoRefresh()
-    window.addEventListener('resize', this.resizeAll)
   },
   beforeDestroy() {
     clearInterval(this.timer)
     clearInterval(this.refreshTimer)
-    window.removeEventListener('resize', this.resizeAll)
     this.chartList.forEach(c => c.dispose())
     if (this.mapChart) this.mapChart.dispose()
+    // 解绑事件
+    window.removeEventListener('wheel', this.wheelHandler)
+    window.removeEventListener('keydown', this.keyHandler)
+    window.removeEventListener('resize', this.reboundZoom)
   },
   methods: {
+    lockZoom() {
+      // 1. 禁止Ctrl+滚轮
+      this.wheelHandler = (e) => {
+        if (e.ctrlKey) e.preventDefault()
+      }
+      // 2. 禁止Ctrl + + - 0
+      this.keyHandler = (e) => {
+        if(e.ctrlKey && ['+','-','0','NumpadAdd','NumpadSubtract','Numpad0'].includes(e.key)){
+          e.preventDefault()
+        }
+      }
+      // 3. 检测浏览器缩放，自动回弹100%
+      this.reboundZoom = () => {
+        document.body.style.zoom = "100%";
+        document.documentElement.style.zoom = "100%";
+      }
+
+      window.addEventListener('wheel', this.wheelHandler, { passive:false })
+      window.addEventListener('keydown', this.keyHandler)
+      window.addEventListener('resize', this.reboundZoom)
+
+      // 初始化强制100%
+      document.body.style.zoom = "100%";
+      document.documentElement.style.zoom = "100%";
+    },
+
     // 实时时间
     initTime() {
       this.currentTime = new Date().toLocaleString('zh-CN')
@@ -173,9 +203,7 @@ export default {
       }, 1000)
     },
 
-    // ====================== 核心：全局自动刷新所有随机数据 ======================
     refreshAllRandomData() {
-      // 1. 刷新统计总数（每次不一样）
       const total = Math.floor(Math.random() * 41) + 20
       const good = Math.floor(Math.random() * (total * 0.3))
       const bad = total - good
@@ -183,22 +211,18 @@ export default {
       this.screenData.goodCount = good
       this.screenData.badCount = bad
 
-      // 2. 刷新仪表盘覆盖率
       this.screenData.provinceCoverage = (40 + Math.random() * 20).toFixed(2)
       this.screenData.cityCoverage = (10 + Math.random() * 15).toFixed(2)
 
-      // 3. 刷新饼图数据
       this.screenData.pieData = this.screenData.pieData.map(item => ({
         ...item,
         value: Math.floor(Math.random() * 30 + 5)
       }))
 
-      // 4. 刷新折线图数据
       this.screenData.lineData = this.screenData.lineData.map(() =>
           Number((Math.random() * 5).toFixed(1))
       )
 
-      // 5. 刷新三个柱状图数据
       this.screenData.barData.pm25 = this.screenData.barData.pm25.map(() =>
           Math.floor(Math.random() * 4 + 1)
       )
@@ -210,15 +234,13 @@ export default {
       )
     },
 
-    // 自动刷新定时器
     startAutoRefresh() {
       this.refreshTimer = setInterval(() => {
-        this.refreshAllRandomData()
-        this.initAllChart()
+        this.refreshAllRandomData();
+        this.initAllChart();
       }, 5000)
     },
 
-    // 地图悬浮空气质量数据
     getAirData() {
       const aqi = Math.floor(Math.random() * 200) + 30
       let level, isExceed
@@ -235,7 +257,6 @@ export default {
       }
     },
 
-    // 标准中国地图 + 鼠标悬浮提示 + 清新配色
     initMap() {
       this.mapChart = echarts.init(this.$refs.chinaMap)
       fetch('https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json')
@@ -262,10 +283,9 @@ export default {
               geo: {
                 map: 'china',
                 roam: false,
-                zoom: 1.35, // 地图已放大
+                zoom: 1.35,
                 center: [104.0, 36.0],
                 label: { show: true, fontSize: 10 },
-                // 清新绿色系地图
                 itemStyle: {
                   areaColor: '#e6f7f4',
                   borderColor: '#91d4c4'
@@ -288,278 +308,336 @@ export default {
           })
     },
 
-    // 所有图表初始化（美化版 + 完整悬浮提示）
     initAllChart() {
       this.chartList.forEach(c => c.dispose())
       this.chartList = []
 
-      // 仪表盘 1
       const g1 = echarts.init(this.$refs.gauge1)
       g1.setOption({
         tooltip: { formatter: `覆盖率：{c} %` },
         series: [{
           type: 'gauge', startAngle: 180, endAngle: 0, min: 0, max: 100, radius: '90%',
-          axisLine: { lineStyle: { width: 20, color: [[this.screenData.provinceCoverage / 100, '#5470c6'], [1, '#e2e8f0']] }},
-          pointer: { width: 6, length: '55%', itemStyle: { color: '#366ed8' }},
-          anchor: { show: true, size: 12, itemStyle: { color: '#366ed8', borderWidth: 2, borderColor: '#fff' }},
+          axisLine: { lineStyle: { width: 18, color: [[this.screenData.provinceCoverage / 100, '#5470c6'], [1, '#e2e8f0']] }},
+          pointer: { width: 5, length: '55%', itemStyle: { color: '#366ed8' }},
+          anchor: { show: true, size: 10, itemStyle: { color: '#366ed8', borderWidth: 2, borderColor: '#fff' }},
           detail: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
           data: [{ value: this.screenData.provinceCoverage }]
         }]
       })
       this.chartList.push(g1)
 
-      // 仪表盘 2
       const g2 = echarts.init(this.$refs.gauge2)
       g2.setOption({
         tooltip: { formatter: `覆盖率：{c} %` },
         series: [{
           type: 'gauge', startAngle: 180, endAngle: 0, min: 0, max: 100, radius: '90%',
-          axisLine: { lineStyle: { width: 20, color: [[this.screenData.cityCoverage / 100, '#ee6666'], [1, '#e2e8f0']] }},
-          pointer: { width: 6, length: '55%', itemStyle: { color: '#366ed8' }},
-          anchor: { show: true, size: 12, itemStyle: { color: '#366ed8', borderWidth: 2, borderColor: '#fff' }},
+          axisLine: { lineStyle: { width: 18, color: [[this.screenData.cityCoverage / 100, '#ee6666'], [1, '#e2e8f0']] }},
+          pointer: { width: 5, length: '55%', itemStyle: { color: '#366ed8' }},
+          anchor: { show: true, size: 10, itemStyle: { color: '#366ed8', borderWidth: 2, borderColor: '#fff' }},
           detail: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
           data: [{ value: this.screenData.cityCoverage }]
         }]
       })
       this.chartList.push(g2)
 
-      // 美化饼图 + 悬浮提示
       const pie = echarts.init(this.$refs.pieChart)
       pie.setOption({
-        tooltip: {
-          trigger: 'item',
-          formatter: '{b}<br/>数值：{c}<br/>占比：{d}%'
-        },
+        tooltip: { trigger: 'item', formatter: '{b}<br/>数值：{c}<br/>占比：{d}%' },
         color: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#72c3dd', '#c785e6'],
-        legend: {
-          orient: 'vertical', left: '5%', top: 'center', itemGap: 16,
-          textStyle: { fontSize: 14, color: '#333' }
-        },
+        legend: { orient: 'vertical', left: '5%', top: 'center', itemGap: 16, textStyle: { fontSize: 14, color: '#333' }},
         series: [{
           type: 'pie', radius: ['45%', '75%'], center: ['68%', '50%'],
-          itemStyle: {
-            borderRadius: 6, borderColor: '#fff', borderWidth: 3,
-            shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.1)'
-          },
-          emphasis: { scale: true },
-          label: { show: false }, labelLine: { show: false },
+          itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 3, shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.1)' },
+          emphasis: { scale: true }, label: { show: false }, labelLine: { show: false },
           data: this.screenData.pieData
         }]
       })
       this.chartList.push(pie)
 
-      // 美化折线图 + 悬浮提示
       const line = echarts.init(this.$refs.lineChart)
       line.setOption({
-        tooltip: {
-          trigger: 'axis',
-          formatter: '月份：{b}<br/>超标指数：{c}'
-        },
+        tooltip: { trigger: 'axis', formatter: '月份：{b}<br/>超标指数：{c}' },
         grid: { left: 25, right: 25, top: 20, bottom: 20 },
-        xAxis: {
-          type: 'category', data: ['11', '12', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10'],
-          axisLabel: { color: '#666' }
-        },
+        xAxis: { type: 'category', data: ['11', '12', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10'], axisLabel: { color: '#666' }},
         yAxis: { type: 'value', max: 6, axisLabel: { color: '#666' }, splitLine: { lineStyle: { color: '#eee' } } },
         series: [{
           type: 'line', smooth: true, data: this.screenData.lineData, symbolSize: 8,
           lineStyle: { color: '#5470c6', width: 3 },
           itemStyle: { color: '#5470c6' },
-          areaStyle: {
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: 'rgba(84,112,198,0.3)' },
-              { offset: 1, color: 'rgba(84,112,198,0.05)' }
-            ])
-          }
+          areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1, [{offset:0,color:'rgba(84,112,198,0.3)'},{offset:1,color:'rgba(84,112,198,0.05)'}]) }
         }]
       })
       this.chartList.push(line)
 
       const cityNames = ['北京', '天津', '河北', '山西', '内蒙古', '辽宁', '吉林', '黑龙江', '上海', '江苏', '浙江', '安徽', '福建', '江西', '山东', '河南']
 
-      // 美化 PM2.5 柱状图 + 悬浮提示
       const bar1 = echarts.init(this.$refs.bar1)
       bar1.setOption({
-        tooltip: {
-          trigger: 'axis',
-          formatter: '地区：{b}<br/>PM2.5超标次数：{c} 次'
-        },
+        tooltip: { trigger: 'axis', formatter: '地区：{b}<br/>PM2.5超标次数：{c} 次' },
         grid: { left: 15, right: 15, top: 15, bottom: 40 },
-        xAxis: {
-          type: 'category', data: cityNames,
-          axisLabel: { color: '#666', rotate: 45 }
-        },
+        xAxis: { type: 'category', data: cityNames, axisLabel: { color: '#666', rotate: 45 }},
         yAxis: { type: 'value', max: 4, splitLine: { lineStyle: { color: '#eee' } } },
         series: [{
           type: 'bar', barWidth: 14, data: this.screenData.barData.pm25,
-          itemStyle: {
-            borderRadius: [6, 6, 0, 0],
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#72c3dd' }, { offset: 1, color: '#bce7f5' }
-            ])
-          }
+          itemStyle: { borderRadius: [6,6,0,0], color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#72c3dd'},{offset:1,color:'#bce7f5'}]) }
         }]
       })
       this.chartList.push(bar1)
 
-      // 美化 SO2 柱状图 + 悬浮提示
       const bar2 = echarts.init(this.$refs.bar2)
       bar2.setOption({
-        tooltip: {
-          trigger: 'axis',
-          formatter: '地区：{b}<br/>SO₂超标次数：{c} 次'
-        },
+        tooltip: { trigger: 'axis', formatter: '地区：{b}<br/>SO₂超标次数：{c} 次' },
         grid: { left: 15, right: 15, top: 15, bottom: 40 },
-        xAxis: {
-          type: 'category', data: cityNames,
-          axisLabel: { color: '#666', rotate: 45 }
-        },
+        xAxis: { type: 'category', data: cityNames, axisLabel: { color: '#666', rotate: 45 }},
         yAxis: { type: 'value', max: 4, splitLine: { lineStyle: { color: '#eee' } } },
         series: [{
           type: 'bar', barWidth: 14, data: this.screenData.barData.so2,
-          itemStyle: {
-            borderRadius: [6, 6, 0, 0],
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#91cc75' }, { offset: 1, color: '#d5f5b5' }
-            ])
-          }
+          itemStyle: { borderRadius: [6,6,0,0], color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#91cc75'},{offset:1,color:'#d5f5b5'}]) }
         }]
       })
       this.chartList.push(bar2)
 
-      // 美化 CO 柱状图 + 悬浮提示
       const bar3 = echarts.init(this.$refs.bar3)
       bar3.setOption({
-        tooltip: {
-          trigger: 'axis',
-          formatter: '地区：{b}<br/>CO超标次数：{c} 次'
-        },
+        tooltip: { trigger: 'axis', formatter: '地区：{b}<br/>CO超标次数：{c} 次' },
         grid: { left: 15, right: 15, top: 15, bottom: 40 },
-        xAxis: {
-          type: 'category', data: cityNames,
-          axisLabel: { color: '#666', rotate: 45 }
-        },
+        xAxis: { type: 'category', data: cityNames, axisLabel: { color: '#666', rotate: 45 }},
         yAxis: { type: 'value', max: 4, splitLine: { lineStyle: { color: '#eee' } } },
         series: [{
           type: 'bar', barWidth: 14, data: this.screenData.barData.co,
-          itemStyle: {
-            borderRadius: [6, 6, 0, 0],
-            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#ee6666' }, { offset: 1, color: '#f9b7b7' }
-            ])
-          }
+          itemStyle: { borderRadius: [6,6,0,0], color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#ee6666'},{offset:1,color:'#f9b7b7'}]) }
         }]
       })
       this.chartList.push(bar3)
-    },
-
-    resizeAll() {
-      this.chartList.forEach(c => c.resize())
-      if (this.mapChart) this.mapChart.resize()
     }
   }
 }
 </script>
 
 <style scoped>
-.screen-container {
-  width: 100%;
-  height: calc(100vh - 60px);
-  background: #f7f8fa;
-  overflow: hidden;
+html,
+body {
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+  zoom: 100% !important;
+  user-select: none;
+  margin: 0;
+  padding: 0;
+}
+* {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
 }
+
+.screen-container {
+  width: 100vw;
+  height: 100vh;
+  background: #f0f4f8;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .top-header {
   height: 70px;
   background: #ffffff;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
 }
 .top-header h1 {
-  color: #2c3e50;
-  font-size: 24px;
-  margin: 0;
-  font-weight: 600;
+  color: #1e293b;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 2px;
 }
 .header-time {
   position: absolute;
-  right: 30px;
-  color: #666;
-  font-size: 14px;
+  right: 40px;
+  color: #475569;
+  font-size: 15px;
+  font-weight: 500;
 }
+
 .main-wrap {
+  flex: 1;
+  width: 100%;
   display: grid;
-  grid-template-columns: 26% 48% 26%;
+  grid-template-columns: 1fr 1.5fr 1fr;
   gap: 16px;
   padding: 16px;
-  height: calc(100% - 70px);
-  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 1920px;
 }
-.left-col,.center-col,.right-col {
+
+.left-col,
+.center-col,
+.right-col {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  height: 100%;
 }
-.gauge-row { display: flex; gap: 12px; }
+
+.gauge-row {
+  display: flex;
+  gap: 12px;
+  flex: 0 0 auto;
+}
 .gauge-card {
-  flex: 1; background: #fff; border-radius: 12px; padding: 16px;
-  text-align: center; box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+  flex: 1;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+  display: flex;
+  flex-direction: column;
 }
-.gauge-box { width: 100%; height: 150px; }
-.gauge-title{ font-size: 15px; color:#333; margin-bottom:8px; }
-.gauge-val { font-size: 30px; font-weight: 700; color: #5470c6; margin:8px 0 0; }
-.gauge-val.red { color: #ee6666; }
+.gauge-box {
+  flex: 1;
+  width: 100%;
+}
+.gauge-title {
+  font-size: 16px;
+  color: #1e293b;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.gauge-val {
+  font-size: 32px;
+  font-weight: 800;
+  color: #5470c6;
+}
+.gauge-val.red {
+  color: #ee6666;
+}
 
 .chart-card {
-  flex: 1; background: #fff; border-radius: 12px; padding: 16px;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+  flex: 1;
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+  display: flex;
+  flex-direction: column;
 }
-.chart-title{ font-size:15px; color:#333; margin-bottom:10px; }
-.chart-box { width: 100%; height: calc(100% - 30px); }
+.chart-title {
+  font-size: 16px;
+  color: #1e293b;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.chart-box {
+  flex: 1;
+  width: 100%;
+}
 
 .map-wrap {
-  flex: 1; background: #fff; border-radius: 12px;
-  position: relative; box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+  flex: 1;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.07);
 }
-.map-box { width: 100%; height: 100%; }
+.map-box {
+  width: 100%;
+  height: 100%;
+}
 
 .real-stat {
-  background: #fff; border-radius: 12px; padding: 20px;
-  display: flex; justify-content: space-around; box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+  height: 120px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.07);
 }
-.stat-num { font-size: 30px; font-weight: 700; color: #333; }
-.stat-num.green { color: #91cc75; }
-.stat-num.red { color: #ee6666; }
-.stat-label{ margin-top:6px; color:#666; font-size:14px; }
+.stat-num {
+  font-size: 34px;
+  font-weight: 800;
+  color: #1e293b;
+}
+.stat-num.green {
+  color: #91cc75;
+}
+.stat-num.red {
+  color: #ee6666;
+}
+.stat-label {
+  color: #475569;
+  font-size: 15px;
+  font-weight: 500;
+}
 
 .bar-card {
-  flex: 1; background: #fff; border-radius: 12px; padding: 16px;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+  flex: 1;
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+  display: flex;
+  flex-direction: column;
 }
-.bar-title{ font-size:14px; color:#333; margin-bottom:8px; }
-.bar-box { width: 100%; height: calc(100% - 30px); }
+.bar-title {
+  font-size: 15px;
+  color: #1e293b;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.bar-box {
+  flex: 1;
+  width: 100%;
+}
 
-/* 弹窗 */
 .province-info-modal {
-  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  background: #fff; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-  width: 400px; z-index: 9999;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  width: 420px;
+  z-index: 9999;
 }
 .modal-header {
-  padding: 16px; background: #5470c6; color: #fff;
-  border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;
+  padding: 18px;
+  background: linear-gradient(135deg, #5470c6, #4058a8);
+  color: #fff;
+  border-radius: 16px 16px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-.close-btn { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
-.modal-body { padding: 20px; }
+.close-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 28px;
+  cursor: pointer;
+}
+.modal-body {
+  padding: 24px;
+}
 .info-row {
-  display: flex; justify-content: space-between; padding: 12px 0;
-  border-bottom: 1px solid #eee; font-size: 15px;
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 16px;
 }
-.val { font-weight: 600; }
-.red { color: #ee6666; }
-.green { color: #91cc75; }
+.val {
+  font-weight: 700;
+}
+.red {
+  color: #ee6666;
+}
+.green {
+  color: #91cc75;
+}
 </style>
