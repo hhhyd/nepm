@@ -96,7 +96,7 @@ const initChart = async () => {
         },
         data: data.map(item => ({
           name: item.aqiExplain || '未知',
-          value: item.count || 0
+          value: item.total || 0
         }))
       }]
     }

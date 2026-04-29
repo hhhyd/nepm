@@ -70,26 +70,29 @@
 		       join grid_city gc on af.city_id=gc.city_id
 		       join aqi aq on af.estimated_grade=aq.aqi_id
 	</sql>
-	
+
 	<sql id="aqiFeedbackSqlWhere">
-	    <where>
-	        af.state = #{state}
-	        <if test="provinceId!=0">
-	            and af.province_id = #{provinceId}
-	        </if>
-	        <if test="cityId!=0">
-	            and af.city_id = #{cityId}
-	        </if>
-	        <if test="estimatedGrade!=0">
-	            and af.estimated_grade = #{estimatedGrade}
-	        </if>
-	        <if test="afDate!=null and afDate!=''">
-	            and af.af_date = #{afDate}
-	        </if>
-	    </where>
+		<where>
+			<if test="state!=null">
+				af.state = #{state}
+			</if>
+			<if test="provinceId!=null">
+				and af.province_id = #{provinceId}
+			</if>
+			<if test="cityId!=null">
+				and af.city_id = #{cityId}
+			</if>
+			<if test="estimatedGrade!=null">
+				and af.estimated_grade = #{estimatedGrade}
+			</if>
+			<if test="afDate!=null and afDate!=''">
+				and af.af_date = #{afDate}
+			</if>
+		</where>
 	</sql>
 
-    <!-- neps工程 -->
+
+	<!-- neps工程 -->
 	<select id="listAqiFeedbackByTelId" parameterType="String"
 		resultMap="aqiFeedbackResultMap">
 		<include refid="aqiFeedbackSqlSelect"></include>

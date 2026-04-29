@@ -5,7 +5,7 @@
     </el-card>
     <el-card class="login-card">
       <template #header>
-        <h2>全国环境监测网格化平台</h2>
+        <h2>东软环保监督系统</h2>
       </template>
       
       <el-form :model="loginForm" :rules="rules" ref="loginFormRef">
@@ -145,7 +145,7 @@ const handleLogin = async () => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #ADD8E6;
 }
 
 .login-card {

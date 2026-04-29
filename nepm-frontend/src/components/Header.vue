@@ -1,12 +1,12 @@
 <template>
   <el-header class="header">
     <div class="header-left">
-      <h2>全国环境监测网格化平台</h2>
+      <h2>东软环保公众监督系统</h2>
     </div>
     
     <div class="header-right">
       <span>欢迎，{{ userName }}</span>
-      <el-button type="primary" link @click="handleLogout">
+      <el-button type="primary" link @click="handleLogout" style="color: #1f2028">
         退出登录
       </el-button>
     </div>

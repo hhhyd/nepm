@@ -7,6 +7,8 @@ public class ProvinceItemTotalStatisDto {
 	private String provinceAbbr;
 	private String provinceName;
 	private Integer so2Total;
+	private Integer totalCount;
+	private Integer goodCount;
 	private Integer coTotal;
 	private Integer spmTotal;
 	private Integer aqiTotal;
@@ -29,6 +31,19 @@ public class ProvinceItemTotalStatisDto {
 	public void setProvinceName(String provinceName) {
 		this.provinceName = provinceName;
 	}
+	public Integer getTotalCount() {
+		return totalCount;
+	}
+	public void setTotalCount(Integer totalCount) {
+		this.totalCount = totalCount;
+	}
+	public Integer getGoodCount() {
+		return goodCount;
+	}
+	public void setGoodCount(Integer goodCount) {
+		this.goodCount = goodCount;
+	}
+
 	public Integer getSo2Total() {
 		return so2Total;
 	}

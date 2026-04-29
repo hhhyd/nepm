@@ -52,6 +52,7 @@
             </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="handleSearch">查询</el-button>
+              <el-button type="success" @click="handleQueryAll">查询全部</el-button>
               <el-button @click="resetQuery">清空</el-button>
             </el-form-item>
           </el-form>
@@ -237,12 +238,15 @@ const loadFeedbackList = async () => {
     loading.value = false
   }
 }
-
 const handleSearch = () => {
   queryForm.pageNum = 1
   loadFeedbackList()
 }
-
+const handleQueryAll = () => {
+  queryForm.pageNum = 1
+  queryForm.state = null
+  loadFeedbackList()
+}
 const resetQuery = () => {
   queryForm.provinceId = null
   queryForm.cityId = null
@@ -290,7 +294,7 @@ const initAssignDialog = async (row) => {
 
   try {
     const res = await getGridMembersByProvince({ provinceId: row.provinceId })
-    localMembers.value = (res || []).filter(m => m.cityId === row.cityId && m.state === 0)
+    localMembers.value = (res || []).filter(m => m.cityId === row.cityId)
   } catch (e) {}
 
   assignVisible.value = true

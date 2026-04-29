@@ -111,17 +111,24 @@
 	
 	<!-- nepv工程 -->
 	<select id="listProvinceItemTotalStatis" resultType="ProvinceItemTotalStatisDto">
-	    select gp.province_id province_id,
-	           gp.province_abbr province_abbr,
-	           gp.province_name province_name,
-	    	   (select count(s.so2_level) from statistics s where s.so2_level>2 and s.province_id=gp.province_id) so2_total,
-	    	   (select count(s.co_level) from statistics s where s.co_level>2 and s.province_id=gp.province_id) co_total,
-	    	   (select count(s.spm_level) from statistics s where s.spm_level>2 and s.province_id=gp.province_id) spm_total,
-	    	   (select count(s.aqi_id) from statistics s where s.aqi_id>2 and s.province_id=gp.province_id) aqi_total
-	    from grid_province gp
-	    order by gp.province_id
-	</select>
-	
+	<![CDATA[
+		select gp.province_id province_id,
+			   gp.province_abbr province_abbr,
+			   gp.province_name province_name,
+			   (select count(*) from statistics s where s.province_id=gp.province_id) total_count,
+			   (select count(*) from statistics s where s.province_id=gp.province_id and s.aqi_id<=2) good_count,
+			   (select count(s.so2_level) from statistics s where s.so2_level>2 and s.province_id=gp.province_id) so2_total,
+			   (select count(s.co_level) from statistics s where s.co_level>2 and s.province_id=gp.province_id) co_total,
+			   (select count(s.spm_level) from statistics s where s.spm_level>2 and s.province_id=gp.province_id) spm_total,
+			   (select count(s.aqi_id) from statistics s where s.aqi_id>2 and s.province_id=gp.province_id) aqi_total
+		from grid_province gp
+		order by gp.province_id
+		]]>
+</select>
+
+
+
+
 	<select id="listAqiDistributeTotalStatis" resultType="AqiDistributeTotalStatisDto">
 	    select a.aqi_id aqi_id,
 	           a.aqi_explain aqi_explain,

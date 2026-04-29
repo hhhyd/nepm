@@ -21,8 +21,7 @@ public class GridMemberServiceImpl implements IGridMemberService {
 	public List<GridMember> listGridMemberByProvinceId(GridMember gridMember) {
 		QueryWrapper<GridMember> queryWrapper = new QueryWrapper<>();
 		queryWrapper.eq("province_id", gridMember.getProvinceId());
-		queryWrapper.eq("city_id", gridMember.getCityId());
-		queryWrapper.eq("state", gridMember.getState());
+		queryWrapper.eq("state", 0);  // 固定查询在岗状态
 		return gridMemberMapper.selectList(queryWrapper);
 	}
 	

@@ -92,16 +92,6 @@ const router = createRouter({
           path: 'dashboard',
           name: 'GridDashboard',
           component: () => import('@/views/gridMember/GridDashboard.vue')
-        },
-        {
-          path: 'myTasks',
-          name: 'GridMyTasks',
-          component: () => import('@/views/gridMember/MyTasks.vue')
-        },
-        {
-          path: 'detect',
-          name: 'GridDetect',
-          component: () => import('@/views/gridMember/Detect.vue')
         }
       ]
     },
